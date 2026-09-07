@@ -290,21 +290,28 @@ This one is especially important: we should not mark 4.3 demonstrated merely bec
   
 ---  
   
-## 4.8 — Incident response and data sources  
-  
-This is another place where I think your proposed model is substantially better than treating the objective as one checkbox.  
-  
-| IDAtomic requirement |                                                      |  
-| -------------------- | ---------------------------------------------------- |  
-| 4.8-A                | Implement **incident response processes**            |  
-| 4.8-B                | Address **incident response training**               |  
-| 4.8-C                | Conduct **incident response testing**                |  
-| 4.8-D                | Perform **root cause analysis**                      |  
-| 4.8-E                | Conduct **threat hunting**                           |  
-| 4.8-F                | Conduct/use **digital forensics**                    |  
-| 4.8-G                | Use **log data** to support investigations           |  
-| 4.8-H                | Use **other data sources** to support investigations |  
-  
+## 4.8 — Incident response
+
+This is another place where I think your proposed model is substantially better than treating the objective as one checkbox.
+
+| IDAtomic requirement |                                                      |
+| -------------------- | ---------------------------------------------------- |
+| 4.8-A                | Implement **incident response processes**            |
+| 4.8-B                | Address **incident response training**               |
+| 4.8-C                | Conduct **incident response testing**                |
+| 4.8-D                | Perform **root cause analysis**                      |
+| 4.8-E                | Conduct **threat hunting**                           |
+| 4.8-F                | Conduct/use **digital forensics**                    |
+
+---
+
+## 4.9 — Data sources
+
+| IDAtomic requirement |                                                        |
+| -------------------- | ------------------------------------------------------ |
+| 4.9-A                | Use **log data** to support investigations             |
+| 4.9-B                | Use **other data sources** to support investigations   |
+
 ---  
   
 # Domain 5 — Security Program Management & Oversight  
