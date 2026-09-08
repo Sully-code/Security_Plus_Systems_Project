@@ -28,6 +28,16 @@ The governing principle:
 
 > **Security+ is the destination. The Mission Atlas is the vehicle.**
 
+## How This Was Built
+
+This program was built through an active learning workflow in which AI
+acted as an execution partner, not an answer machine: I supply the mental
+model, the AI validates what's correct, corrects what isn't, and fills in
+gaps — and my understanding is quizzed before any Security+ coverage is
+recorded. Every artifact and coverage status reflects what was actually
+demonstrated, not what was generated. Accuracy is ensured through strict 
+source guidelines, quotes with citations, and constant checking on my part. 
+
 ## Status: Work In Progress
 
 This project is **not complete** and is actively being developed.
