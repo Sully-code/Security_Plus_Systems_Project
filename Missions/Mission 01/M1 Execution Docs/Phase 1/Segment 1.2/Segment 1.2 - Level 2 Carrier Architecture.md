@@ -111,10 +111,10 @@ Here's the corrected chronology for what happens during authentication:
 2. Phone sends a "register me" request to the cell tower (gNB) → forwarded to the gatekeeper (AMF) - Request includes your encrypted ID (SUCI) or temporary ID (5G-GUTI) from last time
 3. Gatekeeper (AMF) asks the auth server (AUSF) to verify you - Includes your encrypted ID and which serving network is involved (SNN — Serving Network Name)
 4. Auth server asks the subscriber database (UDM/ARPF) for your credentials
-5. Database **(UDM/ARPF)** decrypts your ID, looks up your secret key K, and generates a challenge package - Random number (RAND), auth token (AUTN), expected answer *_(XRES_)**, anchor key (K_AUSF)
+5. Database **(UDM/ARPF/SIDF)** decrypts your ID, looks up your secret key K, and generates a challenge package - Random number (RAND), auth token (AUTN), expected answer *(XRES)**, anchor key (K_AUSF)
 6. Challenge sent back to your phone: "Here's a random number and proof we're legitimate"
 7. Your phone's **USIM** checks the auth token (proves we're a real network), then computes the answer using the secret key K **(mutual auth)** and derives **RES***
-8. Phone sends answer __(RES_)_* back up the chain to the auth server (AUSF)
+8. Phone sends answer (RES*) back up the chain to the auth server (AUSF)
 9. Visited network **(SEAF / AMF)** hashes RES* + RAND and compares against HXRES* (local check)
 10. Auth server (AUSF) compares your answer (RES*) against the expected one (XRES*) → match = you're in (home network's independent check)
 11. Keys are generated for both sides independently from K: **K → CK/IK → K_AUSF → K_SEAF → K_AMF** → final keys for NAS, RRC, and user-plane encryption
