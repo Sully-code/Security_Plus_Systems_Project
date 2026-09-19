@@ -260,6 +260,7 @@ Here's the corrected chronology for what happens during authentication:
 ## **Products:**
 
 - Level 2 carrier architecture diagram (Artifact 3)
+	![[Level 2 Diagram.png]]
 - Home + roaming 5G-AKA authentication flows (Artifact 4)
     - [[#The Actual 5G-AKA Flow (Simplified)|Home Flow]]
     - [[#The Actual 5G-AKA Flow (Roaming — Simplified)|Roaming Flow]]
@@ -320,3 +321,88 @@ Walk the identity chain end to end: **what is stored permanently on the SIM, wha
 |**2.2-H** Attack surfaces|🔵 Encountered|Air interface + rogue base station threat identified|Quiz Q2 + TB#1 diagram marker|
 |**4.1-B** Mobile solutions|🟡 **Understood**|✅ Quiz passed (identity chain + USIM role)|Quiz Q3|
 |**4.6-A** Provisioning|🟡 **Understood**|✅ Quiz passed (identity allocation sequence)|Quiz Q3, roaming flow steps 14–16|
+
+---
+
+## Curiosity Questions: 
+
+- **Question 1:** The home network sends the roaming network the SUPI and K_SEAF. That tells the roaming network who you are but the roaming network never learns your secret K. Is it ok that the network knows who you are?
+	- **Answer 1:** 
+
+| **Concern**             | **Current Status**                                               |
+| ----------------------- | ---------------------------------------------------------------- |
+| Post-auth tracking      | Visitor network can correlate sessions via SUPI                  |
+| Data retention          | Varies by carrier/regulation; no global standard                 |
+| Cross-carrier profiling | Limited technical barriers once SUPI is known                    |
+| SUPI length leakage     | Variable-length SUs can reveal info (being addressed in Rel-18+) |
+- **Question 2:** How would a carrier track you across into another carrier's network? 
+	- **Answer 2:** Cross-Carrier Tracking Threat Model
+
+|#|Threat Vector|Mechanism|Specified Protection|Remaining Gap|Source|Accuracy Rating|
+|---|---|---|---|---|---|---|
+|1|**Single VPLMN session tracking**|VPLMN receives SUPI + logs activity during visit|None — this is intentional for billing/fraud|No technical restriction on VPLMN retention|TS 33.501 §6.1.3.2; ENISA|**Verified** — explicit in spec architecture|
+|2|**Cross-carrier correlation (VPLMN A → B)**|Same SUPI appears in multiple visited networks|Commercial contracts; GDPR jurisdiction|**No technical barrier**; depends on data-sharing agreements|p1sec.com; NIST CSWP 36A|**Analyzed** — inferred from architecture, not explicitly prohibited|
+|3|**IPX intermediary aggregation**|IPX providers process roaming signaling for 500+ networks|TLS 1.3 + PRINS on N32-f (between SEPPs)|IPX nodes see decrypted routing data per operational model|Comfone press release (Oct 2025); GSMA NG.113|**Attributed** — vendor marketing claims; no independent verification|
+|4|**Home network complete travel history**|HPLMN receives usage/billing records from each VPLMN|Subscriber contract terms|**Intentional design** — enables roaming settlement|Standard roaming architecture|**Verified** — operational requirement per GSMA|
+|5|**GUTI refresh inconsistency**|Periodic GUTI updates governed by "should" not "shall"|Mandatory at initial reg, mobility update, paging-response|Operator discretion on periodic renewal timing|TS 33.501 §6.12.3; ShareTechnote analysis|**Verified** — spec language distinguishes "shall" vs "should"|
+|6|**Variable-length SUPI leakage**|NAI-format SUPI length observable over radio|Rel-18 studies 10 mitigation options|**Incomplete** in Rel-15/16 deployed networks|Ericsson blog (Apr 2024); 3GPP SA3 study|**Attributed** — research status as of Rel-18, not in all deployments|
+|7|**SUCI implementation downgrade**|Networks may accept cleartext SUPI if home doesn't support encryption|ECIES required when both parties support|Silent downgrade possible (implementation-dependent)|NIST CSWP 36A; arXiv:2409.17700v1|**Analyzed** — vulnerability demonstrated; severity debated|
+|8|**Lawful intercept access**|State actors with carrier cooperation|Judicial oversight varies by jurisdiction|**Intentional capability** — regulatory requirement|ENISA 5G report (Section 5)|**Verified** — acknowledged in EU assessment|
+|9|**Passive radio surveillance (IMSI catcher)**|Attacker broadcasts to force identity disclosure|SUCI ECIES encryption on NG-RAN|Active probing attacks still possible|TS 33.501 §5.2.5; 3GPP Key Issue #3.2|**Verified** — 3GPP concluded low probability but non-zero|
+|10|**N32 interconnect compromise**|Unauthorized interception of SEPP-to-SEPP traffic|TLS 1.3 mutual auth + PRINS integrity|Legitimate endpoints still process plaintext internally|TS 33.501 §13; TS 29.573|**Verified** — protects transit, not endpoint handling|
+
+Actor Capability Assessment
+
+|Actor|Data Access|Constraint|Source|
+|---|---|---|---|
+|Passive radio attacker (no infrastructure access)|❌ Blocked|SUCI ECIES on NG-RAN|TS 33.501 §5.2.5, §6.12.2|
+|Visited network operator (active subscriber)|✅ Full (during visit)|None — operational necessity|TS 33.501 §6.1.3.2|
+|Home network operator|✅ Full (all historical visits)|None — billing/settlement requirement|GSMA roaming standards|
+|IPX provider (intermediary)|⚠️ Partial-to-full|Contractual agreements; GSMA frameworks|GSMA NG.113; vendor documentation|
+|State actor with carrier cooperation|✅ Full|Jurisdictional legal process|ENISA report Section 5|
+|Non-partner carrier (no roaming agreement)|❌ None|No technical/data-sharing pathway|Roaming architecture design|
+- **Question 3:** It seems nothing more can be done but using airplane mode when idle and asking for a SUCI enabled SIM from the carrier. Even so, much of the privacy coverage we're talking about is for 5G. What is the vulnerability if my phone switches between 5G and 4G when traveling? 
+	- **Answer 3:**  Core Vulnerability: The Downgrade Attack:
+
+| Aspect                   | 5G SA (Standalone)                                          | 5G NSA (Non-Standalone)                      | 4G LTE                                                   |
+| ------------------------ | ----------------------------------------------------------- | -------------------------------------------- | -------------------------------------------------------- |
+| **SUCI Support**         | ✅ Required (if home network public key provisioned)         | ⚠️ Optional (often disabled; core is 4G EPC) | ❌ No — IMSI sent in cleartext                            |
+| **Base Station Auth**    | ✅ Mutual authentication (UE authenticates network via AUTN) | ⚠️ Partial (relies on 4G EPC)                | ❌ No network authentication (IMSI catcher vulnerability) |
+| **Downgrade Resistance** | ✅ Only if 5G-only mode enforced                             | ❌ Falls back to 4G by design                 | N/A                                                      |
+| **IMSI Exposure**        | ❌ Protected (SUCI)                                          | ⚠️ Possible via forced LTE fallback          | ✅ Cleartext on initial attach                            |
+
+	- Updated Cross-Carrier Tracking Threat (Including 4G):
+
+|#|Threat|5G SA|5G NSA|4G|Source|
+|---|---|---|---|---|---|
+|1|SUCI protection|✅ Yes|⚠️ Optional|❌ No (IMSI cleartext)|TS 33.501 §6.12.2; arXiv:1811.02293v1|
+|2|Downgrade attack surface|⚠️ If roaming to 4G areas|❌ High (built-in fallback)|N/A|Montsecure Bidding-Down|
+|3|Base station authentication|✅ Yes (AUTN validation)|⚠️ Partial|❌ No|TS 33.501 §6.1.3|
+|4|Encryption strength|256-bit (NEA2/NEA3)|Mixed (depends on core)|128-bit (EEA2) or broken (A5/1)|TS 33.501 §6.3|
+|5|IMSI exposure risk|Low (initial attach)|Medium (NSA fallback)|High (always cleartext on attach)|Mobile Security Authority|
+|6|Replay attack resistance|✅ With fresh counters|⚠️ Varies|❌ Weak (TMSI reuse)|p1sec.com 5G-AKA Linkability|
+|7|Null-ciphering (EA0/EA0)|⚠️ Allowed by spec|⚠️ Common|⚠️ Allowed|arXiv:2511.03312v1|
+
+	- Bottom Line on 4G/5G Switching:
+
+**The downgrade attack is the weakest link in 5G privacy.** Here's why:
+
+1. **SUCI only works on 5G NR** — Drop to LTE, and you're sending IMSI in cleartext again
+2. **Downgrade is standards-compliant** — Attackers exploit normal protocol behavior, not bugs
+3. **User has no control** — Phones auto-fallback to 4G for coverage/voice
+4. **NSA deployments dominate** — Most "5G" today is actually 4G core with 5G radio
+5. **2G fallback still exists** — Some operators permit 2G for voice; A5/1 encryption is trivially broken
+
+**The net effect**: If you're in a 4G-covered area, or if an attacker jams your 5G signal, your phone drops to 4G and the SUCI protection disappears entirely. The same attacker can now harvest your IMSI and track you.
+
+	- References for This Section:
+
+|Source|Relevance|
+|---|---|
+|arXiv:1811.02293v1 "Defeating the Downgrade Attack on Identity Privacy in 5G"|Core academic analysis of SUCI bypass via LTE|
+|3GPP TS 33.501 Annex C|Acknowledges residual NSA deployment risks|
+|Mobile Security Authority "Cellular Vulnerabilities"|Practical assessment of IMSI catcher threats in 5G|
+|Montsecure "Bidding-Down Attacks and Mitigations in 5G and 4G"|Downgrade attack methodology|
+|p1sec.com "5G-AKA Linkability Attacks"|Post-downgrade exploitation scenarios|
+|arXiv:2511.03312v1 "Null-ciphering" attack analysis|256-bit encryption weaknesses in 5G|
+|SoK WiSec Paper "Legacy and Emerging Attacks"|SUCI optional status critique (Takeaway 6)|
